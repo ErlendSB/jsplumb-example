@@ -130,7 +130,14 @@ myApp.directive('plumbItem', ['$document', function($document) {
 
 			jsPlumb.makeTarget(element, {
 				anchor: 'Continuous',
-				maxConnections: 2,
+				maxConnections: 1,
+				beforeDrop:function(event){
+					console.log(event);
+					if (event.sourceId == event.targetId)
+						return false;
+					else
+						return true;
+				}
 			});
 			jsPlumb.draggable(element, {
 				containment: 'parent'
@@ -154,7 +161,8 @@ myApp.directive('plumbItem', ['$document', function($document) {
 		      clickY = event.pageY;
 		      //console.log(startX);
 		      //$document.on('mousemove', mousemove);
-		      $document.on('mouseup', mouseup);
+		      if (!angular.element(event.target).hasClass('connect'))
+		      	$document.on('mouseup', mouseup);
 		    });
 
 		    function mousemove(event) {
@@ -227,12 +235,13 @@ myApp.directive('plumbConnect', function() {
 			jsPlumb.makeSource(element, {
 				parent: $(element).parent(),
 				anchor: 'Continuous',
+				allowLoopback:false,
 				paintStyle:{ 
 					strokeStyle:"#225588",
 					fillStyle:"transparent",
 					radius:7,
 					lineWidth:2 
-				},
+				}
 			});
 		}
 	};
