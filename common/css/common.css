@@ -48,6 +48,7 @@
 	border: 2px solid gray;
 	width: 958px;
 	height: 500px;
+	/*position: relative;*/
 }
 
 /* the menu is 200px wide */

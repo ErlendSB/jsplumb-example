@@ -35,7 +35,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 
 	$scope.module_css = {
 			width: 150,
-			height: 100, // actually variable
+			height: 105, // actually variable
 	};
 
 	$scope.redraw = function() {
@@ -116,12 +116,17 @@ myApp.directive('postRender', [ '$timeout', function($timeout) {
 //now we extend html with <div plumb-item>, we can define a template <> to replace it with "proper" html, or we can 
 //replace it with something more sophisticated, e.g. setting jsPlumb arguments and attach it to a double-click 
 //event
-myApp.directive('plumbItem', function() {
+myApp.directive('plumbItem', ['$document', function($document) {
 	return {
 		replace: true,
 		controller: 'PlumbCtrl',
 		link: function (scope, element, attrs) {
 			console.log("Add plumbing for the 'item' element");
+			var clickX = 0, clickY = 0, dropX = 0, dropY = 0, startX = scope.module.x,startY = scope.module.y, mouseX = 0, mouseY = 0;
+			//var moduleX = startX, moduleY = startY;
+			var containerHeight = element[0].parentElement.offsetHeight, containerWidth = element[0].parentElement.offsetWidth;
+			console.log(element);
+			var moduleHeight = scope.module_css.height, moduleWidth = scope.module_css.width;
 
 			jsPlumb.makeTarget(element, {
 				anchor: 'Continuous',
@@ -142,9 +147,51 @@ myApp.directive('plumbItem', function() {
 				scope.$parent.$digest();
 			});
 
+			element.on('mousedown', function(event) {
+		      // Prevent default dragging of selected content
+		      event.preventDefault();
+		      clickX = event.pageX;
+		      clickY = event.pageY;
+		      //console.log(startX);
+		      //$document.on('mousemove', mousemove);
+		      $document.on('mouseup', mouseup);
+		    });
+
+		    function mousemove(event) {
+
+		    }
+
+		    function mouseup(event) {
+		      	//$document.off('mousemove', mousemove);
+		      	$document.off('mouseup', mouseup);
+		      	dropX = event.pageX;
+		      	dropY = event.pageY;
+			    //console.log('clickX:' + clickX + ' clickY:' + clickY);
+			    //console.log('dropX:' + dropX + ' dropY:' + dropY);
+			    console.log('dragDistanceX:' + (dropX - clickX));
+			    console.log('dragDistanceY:' + (dropY - clickY));
+		      	console.log('startX:' + startX + ' startY:' + startY);
+
+			  	startX = startX + (dropX - clickX);
+		      	startY = startY + (dropY - clickY);
+		      	console.log('containerWidth:' + containerWidth + ' moduleWidth:' + moduleWidth);
+		      	console.log('containerHeight:' + containerHeight + ' moduleHeight:' + moduleHeight);
+		      	if (startX > (containerWidth - moduleWidth))
+		      		startX = containerWidth - moduleWidth;
+
+		      	if (startY > (containerHeight - moduleHeight))
+		      		startY = containerHeight - moduleHeight;
+
+		      	console.log('startX(after):' + startX + ' startY(after):' + startY);
+
+		      	scope.module.x = startX;
+		      	scope.module.y = startY;
+		      	scope.$apply();
+		    }
+
 		}
 	};
-});
+}]);
 
 //
 // This directive should allow an element to be dragged onto the main canvas. Then after it is dropped, it should be
@@ -173,7 +220,7 @@ myApp.directive('plumbConnect', function() {
 
 			jsPlumb.makeSource(element, {
 				parent: $(element).parent(),
-//				anchor: 'Continuous',
+				anchor: 'Continuous',
 				paintStyle:{ 
 					strokeStyle:"#225588",
 					fillStyle:"transparent",
