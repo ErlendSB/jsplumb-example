@@ -34,8 +34,8 @@ myApp.controller('PlumbCtrl', function($scope) {
 	};
 
 	$scope.module_css = {
-			width: 150,
-			height: 105, // actually variable
+			width: 154,
+			height: 109, // actually variable
 	};
 
 	$scope.redraw = function() {
@@ -125,7 +125,7 @@ myApp.directive('plumbItem', ['$document', function($document) {
 			var clickX = 0, clickY = 0, dropX = 0, dropY = 0, startX = scope.module.x,startY = scope.module.y, mouseX = 0, mouseY = 0;
 			//var moduleX = startX, moduleY = startY;
 			var containerHeight = element[0].parentElement.offsetHeight, containerWidth = element[0].parentElement.offsetWidth;
-			console.log(element);
+			console.log(element[0].parentElement);
 			var moduleHeight = scope.module_css.height, moduleWidth = scope.module_css.width;
 
 			jsPlumb.makeTarget(element, {
@@ -176,11 +176,17 @@ myApp.directive('plumbItem', ['$document', function($document) {
 		      	startY = startY + (dropY - clickY);
 		      	console.log('containerWidth:' + containerWidth + ' moduleWidth:' + moduleWidth);
 		      	console.log('containerHeight:' + containerHeight + ' moduleHeight:' + moduleHeight);
+		      	if (startX < 0)
+		      		startX = 0;
+
 		      	if (startX > (containerWidth - moduleWidth))
 		      		startX = containerWidth - moduleWidth;
 
 		      	if (startY > (containerHeight - moduleHeight))
 		      		startY = containerHeight - moduleHeight;
+
+		      	if (startY < 0)
+		      		startY = 0;
 
 		      	console.log('startX(after):' + startX + ' startY(after):' + startY);
 
@@ -249,9 +255,12 @@ myApp.directive('droppable', function($compile) {
 					// if dragged item has class menu-item and dropped div has class drop-container, add module 
 					if (dragEl.hasClass('menu-item') && dropEl.hasClass('drop-container')) {
 						console.log("Drag event on " + dragIndex);
-						var x = event.pageX - scope.module_css.width / 2;
-						var y = event.pageY - scope.module_css.height / 2;
-
+						var offset = dropEl.offset();
+						var x = event.pageX - offset.left - (scope.module_css.width / 2);
+						var y = event.pageY - offset.top - (scope.module_css.height / 2);
+						//var x = event.pageX;
+						//var y = event.pageY - scope.module_css.height;
+						console.log('x:' + x + ' y:' + y + ' offsetTop:' + ui.offset.top + ' offsetLeft:' + ui.offset.left);
 						scope.addModuleToSchema(dragIndex, x, y);
 					}
 
