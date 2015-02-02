@@ -79,6 +79,19 @@ myApp.controller('PlumbCtrl', function($scope) {
 
 	};
 
+	// add a module connection
+	$scope.removeModuleConnection = function(sourceId, targetId) {
+		console.log("Remove module connection " + sourceId + " to " + targetId);
+		for (var i = 0; i < $scope.schema.connections.length; i++) {
+			// compare in non-strict manner
+			if ($scope.schema.connections[i].sourceId == sourceId && $scope.schema.connections[i].targetId == targetId) {
+				console.log("Remove state at position " + i);
+				$scope.schema.connections.splice(i, 1);
+			}
+		}
+
+	};
+
 	// add a module to the schema
 	$scope.addModuleToSchema = function(library_id, posX, posY) {
 		console.log("Add module " + title + " to schema, at position " + posX + "," + posY);
@@ -117,12 +130,17 @@ myApp.controller('PlumbCtrl', function($scope) {
 			});
 			jsPlumb.bind("connection", function (info) {
 				$scope.$apply(function () {
+					$scope.addModuleConnection(info.sourceId, info.targetId);
 					console.log("Possibility to push connection into array");
 				});
 			});
 			jsPlumb.bind("click", function(conn, originalEvent) {
-				if (confirm("Delete connection from " + conn.sourceId + " to " + conn.targetId + "?"))
-					jsPlumb.detach(conn); 
+				if (confirm("Delete connection from " + conn.sourceId + " to " + conn.targetId + "?")){
+					jsPlumb.detach(conn);
+					$scope.$apply(function () {
+						$scope.removeModuleConnection(conn.sourceId,conn.targetId);
+					});
+				}
 			});	
 
 		});
@@ -169,9 +187,6 @@ myApp.directive('plumbItem', ['$document', function($document) {
 					if (event.sourceId == event.targetId)
 						return false;
 					else{
-						scope.addModuleConnection(event.sourceId,event.targetId);
-						//Why is it not updating the array?!?!?
-						scope.$apply();
 						return true;
 					}
 				}
