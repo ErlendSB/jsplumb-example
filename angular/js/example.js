@@ -108,6 +108,17 @@ myApp.controller('PlumbCtrl', function($scope) {
 		$scope.schema.modules.push(m);
 	};
 
+	$scope.removeModule = function(module){
+		console.log(module);
+		//var elem = source.parentElement;
+		//jsPlumb.detachAllConnections($(elem));
+		//$(elem).remove();
+		//we need the scope of the parent, here assuming <plumb-item> is part of the <plumbApp>			
+		$scope.removeState( module.schema_id);
+		console.log($scope.schema.modules);
+
+	}
+
 	$scope.removeState = function(schema_id) {
 		console.log("Remove state " + schema_id + " in array of length " + $scope.schema.modules.length);
 		for (var i = 0; i < $scope.schema.modules.length; i++) {
@@ -196,9 +207,10 @@ myApp.directive('plumbItem', ['$document', function($document) {
 				containment: 'parent'
 			});
 			// this should actually done by a AngularJS template and subsequently a controller attached to the dbl-click event
-			element.bind('dblclick', function(e) {
-				jsPlumb.detachAllConnections($(this));
-				$(this).remove();
+			var closebutton = angular.element(element[0].querySelector('.closebutton'));
+			closebutton.bind('click', function(e) {
+				jsPlumb.detachAllConnections($(this.parent));
+				$(this.parent).remove();
 				// stop event propagation, so it does not directly generate a new state
 				e.stopPropagation();
 				//we need the scope of the parent, here assuming <plumb-item> is part of the <plumbApp>			
