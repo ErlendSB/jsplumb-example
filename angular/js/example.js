@@ -124,7 +124,15 @@ myApp.controller('PlumbCtrl', function($scope) {
 		for (var i = 0; i < $scope.schema.modules.length; i++) {
 			// compare in non-strict manner
 			if ($scope.schema.modules[i].schema_id == schema_id) {
-				console.log("Remove state at position " + i);
+				console.log("Remove module at position " + i);
+				var j = $scope.schema.connections.length;
+				while(j--) {
+					console.log($scope.schema.connections[j]);
+					if ($scope.schema.connections[j].sourceId == schema_id || $scope.schema.connections[j].targetId == schema_id) {
+						console.log("Remove connections at position " + j);
+						$scope.schema.connections.splice(j, 1);
+					}
+				}
 				$scope.schema.modules.splice(i, 1);
 			}
 		}
@@ -141,7 +149,11 @@ myApp.controller('PlumbCtrl', function($scope) {
 			});
 			jsPlumb.bind("connection", function (info) {
 				$scope.$apply(function () {
-					$scope.addModuleConnection(info.sourceId, info.targetId);
+					console.log(info.connection.source[0].getAttribute('data-identifier'));
+					var sourceSchemaId = info.connection.source[0].getAttribute('data-identifier');
+					var targetSchemaId = info.connection.target[0].getAttribute('data-identifier');
+					//$scope.addModuleConnection(info.sourceId, info.targetId);
+					$scope.addModuleConnection(sourceSchemaId, targetSchemaId);
 					console.log("Possibility to push connection into array");
 				});
 			});
@@ -149,7 +161,9 @@ myApp.controller('PlumbCtrl', function($scope) {
 				if (confirm("Delete connection from " + conn.sourceId + " to " + conn.targetId + "?")){
 					jsPlumb.detach(conn);
 					$scope.$apply(function () {
-						$scope.removeModuleConnection(conn.sourceId,conn.targetId);
+						var sourceSchemaId = conn.source[0].getAttribute('data-identifier');
+						var targetSchemaId = conn.target[0].getAttribute('data-identifier');
+						$scope.removeModuleConnection(sourceSchemaId,targetSchemaId);
 					});
 				}
 			});	
@@ -209,8 +223,9 @@ myApp.directive('plumbItem', ['$document', function($document) {
 			// this should actually done by a AngularJS template and subsequently a controller attached to the dbl-click event
 			var closebutton = angular.element(element[0].querySelector('.closebutton'));
 			closebutton.bind('click', function(e) {
-				jsPlumb.detachAllConnections($(this.parent));
-				$(this.parent).remove();
+				console.log($(this)[0].parentElement);
+				jsPlumb.detachAllConnections($(this)[0].parentElement);
+				//$(this).remove();
 				// stop event propagation, so it does not directly generate a new state
 				e.stopPropagation();
 				//we need the scope of the parent, here assuming <plumb-item> is part of the <plumbApp>			
