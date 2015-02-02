@@ -67,4 +67,5 @@
 	width: 1px;
 	height: 498px;
 }
+path, ._jsPlumb_endpoint { cursor:pointer; }
 

@@ -13,6 +13,11 @@ myApp.controller('PlumbCtrl', function($scope) {
 		this.y = y;
 	}
 
+	function connection(sourceId, targetId ) {
+		this.sourceId = sourceId;
+		this.targetId = targetId;
+	}
+
 	// module should be visualized by title, icon
 	$scope.library = [];
 
@@ -20,7 +25,10 @@ myApp.controller('PlumbCtrl', function($scope) {
 	$scope.library_uuid = 0; 
 
 	// state is [identifier, x position, y position, title, description]
-	$scope.schema = [];
+	$scope.schema = {};
+	$scope.schema.modules = [];
+
+	$scope.schema.connections = [];
 
 	// schema_uuid should always yield a unique identifier, can never be decreased
 	$scope.schema_uuid = 0; 
@@ -38,10 +46,12 @@ myApp.controller('PlumbCtrl', function($scope) {
 			height: 109, // actually variable
 	};
 
+
 	$scope.redraw = function() {
 		$scope.schema_uuid = 0;
 		jsPlumb.detachEveryConnection();
-		$scope.schema = [];
+		$scope.schema.modules = [];
+		$scope.schema.connections = [];
 		$scope.library = [];
 		$scope.addModuleToLibrary("Sum", "Aggregates an incoming sequences of values and returns the sum", 
 				$scope.library_topleft.x+$scope.library_topleft.margin, 
@@ -60,6 +70,15 @@ myApp.controller('PlumbCtrl', function($scope) {
 		$scope.library.push(m);
 	};
 
+	// add a module connection
+	$scope.addModuleConnection = function(sourceId, targetId) {
+		console.log("Add module connection " + sourceId + " to " + targetId);
+		var c = new connection(sourceId, targetId);
+		$scope.schema.connections.push(c);
+		console.log($scope.schema.connections);
+
+	};
+
 	// add a module to the schema
 	$scope.addModuleToSchema = function(library_id, posX, posY) {
 		console.log("Add module " + title + " to schema, at position " + posX + "," + posY);
@@ -73,16 +92,16 @@ myApp.controller('PlumbCtrl', function($scope) {
 			}
 		}
 		var m = new module(library_id, schema_id, title, description, posX, posY);
-		$scope.schema.push(m);
+		$scope.schema.modules.push(m);
 	};
 
 	$scope.removeState = function(schema_id) {
-		console.log("Remove state " + schema_id + " in array of length " + $scope.schema.length);
-		for (var i = 0; i < $scope.schema.length; i++) {
+		console.log("Remove state " + schema_id + " in array of length " + $scope.schema.modules.length);
+		for (var i = 0; i < $scope.schema.modules.length; i++) {
 			// compare in non-strict manner
-			if ($scope.schema[i].schema_id == schema_id) {
+			if ($scope.schema.modules[i].schema_id == schema_id) {
 				console.log("Remove state at position " + i);
-				$scope.schema.splice(i, 1);
+				$scope.schema.modules.splice(i, 1);
 			}
 		}
 	};
@@ -90,11 +109,22 @@ myApp.controller('PlumbCtrl', function($scope) {
 	$scope.init = function() {
 		jsPlumb.bind("ready", function() {
 			console.log("Set up jsPlumb listeners (should be only done once)");
+			jsPlumb.importDefaults({
+				Connector:"Bezier",
+				ConnectionOverlays : [
+					[ "Arrow", { location:1 } ]
+				]
+			});
 			jsPlumb.bind("connection", function (info) {
 				$scope.$apply(function () {
 					console.log("Possibility to push connection into array");
 				});
 			});
+			jsPlumb.bind("click", function(conn, originalEvent) {
+				if (confirm("Delete connection from " + conn.sourceId + " to " + conn.targetId + "?"))
+					jsPlumb.detach(conn); 
+			});	
+
 		});
 	}
 });
@@ -123,26 +153,33 @@ myApp.directive('plumbItem', ['$document', function($document) {
 		link: function (scope, element, attrs) {
 			console.log("Add plumbing for the 'item' element");
 			var clickX = 0, clickY = 0, dropX = 0, dropY = 0, startX = scope.module.x,startY = scope.module.y, mouseX = 0, mouseY = 0;
-			//var moduleX = startX, moduleY = startY;
 			var containerHeight = element[0].parentElement.offsetHeight, containerWidth = element[0].parentElement.offsetWidth;
 			console.log(element[0].parentElement);
 			var moduleHeight = scope.module_css.height, moduleWidth = scope.module_css.width;
 
 			jsPlumb.makeTarget(element, {
 				anchor: 'Continuous',
+				endpoint:"Dot",					
+				paintStyle:{ fillStyle:"#7AB02C",radius:11 },
+				ConnectionsDetachable:true,
+				isTarget:true,
 				maxConnections: 1,
 				beforeDrop:function(event){
 					console.log(event);
 					if (event.sourceId == event.targetId)
 						return false;
-					else
+					else{
+						scope.addModuleConnection(event.sourceId,event.targetId);
+						//Why is it not updating the array?!?!?
+						scope.$apply();
 						return true;
+					}
 				}
 			});
+
 			jsPlumb.draggable(element, {
 				containment: 'parent'
 			});
-
 			// this should actually done by a AngularJS template and subsequently a controller attached to the dbl-click event
 			element.bind('dblclick', function(e) {
 				jsPlumb.detachAllConnections($(this));
@@ -220,7 +257,8 @@ myApp.directive('plumbMenuItem', function() {
 
 			// jsPlumb uses the containment from the underlying library, in our case that is jQuery.
 			jsPlumb.draggable(element, {
-				containment: element.parent().parent()
+				//containment: element.parent().parent()
+				containment: "container"
 			});
 		}
 	};
@@ -235,12 +273,26 @@ myApp.directive('plumbConnect', function() {
 			jsPlumb.makeSource(element, {
 				parent: $(element).parent(),
 				anchor: 'Continuous',
-				allowLoopback:false,
+				isSource:true,
+				connector:[ "Bezier", { stub:[40, 60], gap:10, cornerRadius:5, alwaysRespectStubs:true } ],								                
 				paintStyle:{ 
-					strokeStyle:"#225588",
+					strokeStyle:"#7AB02C",
 					fillStyle:"transparent",
 					radius:7,
-					lineWidth:2 
+					lineWidth:3 
+				},
+				connectorStyle:{
+					lineWidth:4,
+					strokeStyle:"#61B7CF",
+					joinstyle:"round",
+					outlineColor:"transparent",
+					outlineWidth:2
+				},
+				connectorHoverStyle:{
+					lineWidth:4,
+					strokeStyle:"#216477",
+					outlineWidth:2,
+					outlineColor:"transparent"
 				}
 			});
 		}
