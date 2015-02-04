@@ -13,9 +13,9 @@ myApp.controller('PlumbCtrl', function($scope) {
 		this.y = y;
 	}
 
-	function connection(sourceId, targetId ) {
-		this.sourceId = sourceId;
-		this.targetId = targetId;
+	function connection(source_schema_id, target_schema_id ) {
+		this.source_schema_id = source_schema_id;
+		this.target_schema_id = target_schema_id;
 	}
 
 	// module should be visualized by title, icon
@@ -52,6 +52,12 @@ myApp.controller('PlumbCtrl', function($scope) {
 		jsPlumb.detachEveryConnection();
 		$scope.schema.modules = [];
 		$scope.schema.connections = [];
+		$scope.schema.connections = [{"source_schema_id":"4","target_schema_id":"3"}];
+		$scope.schema.modules = [{"library_id":1,"schema_id":3,"title":"Camera","description":"Hooks up to hardware camera and sends out an image at 20 Hz","x":461,"y":246.5},{"library_id":0,"schema_id":4,"title":"Sum","description":"Aggregates an incoming sequences of values and returns the sum","x":150,"y":118.5}];	
+		//jsPlumb.doWhileSuspended(function() {
+  			// import here - does not work
+		//	jsPlumb.connect({source:"jsPlumb_1_6", target:"jsPlumb_1_4"});
+		//});
 		$scope.library = [];
 		$scope.addModuleToLibrary("Sum", "Aggregates an incoming sequences of values and returns the sum", 
 				$scope.library_topleft.x+$scope.library_topleft.margin, 
@@ -71,20 +77,20 @@ myApp.controller('PlumbCtrl', function($scope) {
 	};
 
 	// add a module connection
-	$scope.addModuleConnection = function(sourceId, targetId) {
-		console.log("Add module connection " + sourceId + " to " + targetId);
-		var c = new connection(sourceId, targetId);
+	$scope.addModuleConnection = function(source_schema_id, target_schema_id) {
+		console.log("Add module connection " + source_schema_id + " to " + target_schema_id);
+		var c = new connection(source_schema_id, target_schema_id);
 		$scope.schema.connections.push(c);
 		console.log($scope.schema.connections);
 
 	};
 
 	// add a module connection
-	$scope.removeModuleConnection = function(sourceId, targetId) {
-		console.log("Remove module connection " + sourceId + " to " + targetId);
+	$scope.removeModuleConnection = function(source_schema_id, target_schema_id) {
+		console.log("Remove module connection " + source_schema_id + " to " + target_schema_id);
 		for (var i = 0; i < $scope.schema.connections.length; i++) {
 			// compare in non-strict manner
-			if ($scope.schema.connections[i].sourceId == sourceId && $scope.schema.connections[i].targetId == targetId) {
+			if ($scope.schema.connections[i].source_schema_id == source_schema_id && $scope.schema.connections[i].target_schema_id == target_schema_id) {
 				console.log("Remove state at position " + i);
 				$scope.schema.connections.splice(i, 1);
 			}
@@ -94,6 +100,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 
 	// add a module to the schema
 	$scope.addModuleToSchema = function(library_id, posX, posY) {
+		console.log($scope.schema.modules);
 		console.log("Add module " + title + " to schema, at position " + posX + "," + posY);
 		var schema_id = $scope.schema_uuid++;
 		var title = "Unknown";
@@ -106,18 +113,22 @@ myApp.controller('PlumbCtrl', function($scope) {
 		}
 		var m = new module(library_id, schema_id, title, description, posX, posY);
 		$scope.schema.modules.push(m);
+		console.log($scope.schema.modules);
 	};
 
-	$scope.removeModule = function(module){
-		console.log(module);
-		//var elem = source.parentElement;
-		//jsPlumb.detachAllConnections($(elem));
-		//$(elem).remove();
-		//we need the scope of the parent, here assuming <plumb-item> is part of the <plumbApp>			
-		$scope.removeState( module.schema_id);
-		console.log($scope.schema.modules);
+	$scope.handleDrop = function(e){
+		var dragEl = e.el,
+		dragIndex = dragEl.getAttribute('data-identifier'),
+		dropEl = document.getElementById('container');
 
-	}
+		if (dragEl.classList.contains('menu-item')) {
+			console.log("Drag event on " + dragIndex);
+			var x = event.pageX - dropEl.offsetLeft - ($scope.module_css.width / 2);
+			var y = event.pageY - dropEl.offsetTop - ($scope.module_css.height / 2);
+			$scope.addModuleToSchema(dragIndex, x, y);
+			$scope.$apply();
+		}
+    };
 
 	$scope.removeState = function(schema_id) {
 		console.log("Remove state " + schema_id + " in array of length " + $scope.schema.modules.length);
@@ -128,7 +139,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 				var j = $scope.schema.connections.length;
 				while(j--) {
 					console.log($scope.schema.connections[j]);
-					if ($scope.schema.connections[j].sourceId == schema_id || $scope.schema.connections[j].targetId == schema_id) {
+					if ($scope.schema.connections[j].source_schema_id == schema_id || $scope.schema.connections[j].target_schema_id == schema_id) {
 						console.log("Remove connections at position " + j);
 						$scope.schema.connections.splice(j, 1);
 					}
@@ -142,31 +153,38 @@ myApp.controller('PlumbCtrl', function($scope) {
 		jsPlumb.bind("ready", function() {
 			console.log("Set up jsPlumb listeners (should be only done once)");
 			jsPlumb.importDefaults({
-				Connector:"Bezier",
+				//Connector:"Straight",
 				ConnectionOverlays : [
 					[ "Arrow", { location:1 } ]
 				]
 			});
 			jsPlumb.bind("connection", function (info) {
 				$scope.$apply(function () {
-					console.log(info.connection.source[0].getAttribute('data-identifier'));
-					var sourceSchemaId = info.connection.source[0].getAttribute('data-identifier');
-					var targetSchemaId = info.connection.target[0].getAttribute('data-identifier');
+					console.log(info.connection.source.getAttribute('data-identifier'));
+					var sourceSchemaId = info.connection.source.getAttribute('data-identifier');
+					var targetSchemaId = info.connection.target.getAttribute('data-identifier');
+					console.log(info.connection.source);
 					//$scope.addModuleConnection(info.sourceId, info.targetId);
 					$scope.addModuleConnection(sourceSchemaId, targetSchemaId);
 					console.log("Possibility to push connection into array");
+					//Is this necessary?
+					jsPlumb.revalidate(info.connection.source);
+					jsPlumb.revalidate(info.connection.target);
+					////jsPlumb.repaint();
 				});
 			});
 			jsPlumb.bind("click", function(conn, originalEvent) {
 				if (confirm("Delete connection from " + conn.sourceId + " to " + conn.targetId + "?")){
 					jsPlumb.detach(conn);
 					$scope.$apply(function () {
-						var sourceSchemaId = conn.source[0].getAttribute('data-identifier');
-						var targetSchemaId = conn.target[0].getAttribute('data-identifier');
+						var sourceSchemaId = document.getElementById(conn.sourceId).getAttribute('data-identifier');
+						var targetSchemaId = document.getElementById(conn.targetId).getAttribute('data-identifier');
 						$scope.removeModuleConnection(sourceSchemaId,targetSchemaId);
 					});
 				}
-			});	
+			});
+
+
 
 		});
 	}
@@ -197,19 +215,18 @@ myApp.directive('plumbItem', ['$document', function($document) {
 			console.log("Add plumbing for the 'item' element");
 			var clickX = 0, clickY = 0, dropX = 0, dropY = 0, startX = scope.module.x,startY = scope.module.y, mouseX = 0, mouseY = 0;
 			var containerHeight = element[0].parentElement.offsetHeight, containerWidth = element[0].parentElement.offsetWidth;
-			console.log(element[0].parentElement);
 			var moduleHeight = scope.module_css.height, moduleWidth = scope.module_css.width;
-
+			
 			jsPlumb.makeTarget(element, {
 				anchor: 'Continuous',
 				endpoint:"Dot",					
 				paintStyle:{ fillStyle:"#7AB02C",radius:11 },
 				ConnectionsDetachable:true,
+				deleteEndpointsOnDetach:false,
 				isTarget:true,
 				maxConnections: 1,
 				beforeDrop:function(event){
-					console.log(event);
-					if (event.sourceId == event.targetId)
+					if (event.sourceId == event.targetId) //Prevent loopback
 						return false;
 					else{
 						return true;
@@ -223,9 +240,7 @@ myApp.directive('plumbItem', ['$document', function($document) {
 			// this should actually done by a AngularJS template and subsequently a controller attached to the dbl-click event
 			var closebutton = angular.element(element[0].querySelector('.closebutton'));
 			closebutton.bind('click', function(e) {
-				console.log($(this)[0].parentElement);
-				jsPlumb.detachAllConnections($(this)[0].parentElement);
-				//$(this).remove();
+				jsPlumb.detachAllConnections(element);
 				// stop event propagation, so it does not directly generate a new state
 				e.stopPropagation();
 				//we need the scope of the parent, here assuming <plumb-item> is part of the <plumbApp>			
@@ -238,8 +253,6 @@ myApp.directive('plumbItem', ['$document', function($document) {
 		      event.preventDefault();
 		      clickX = event.pageX;
 		      clickY = event.pageY;
-		      //console.log(startX);
-		      //$document.on('mousemove', mousemove);
 		      if (!angular.element(event.target).hasClass('connect'))
 		      	$document.on('mouseup', mouseup);
 		    });
@@ -249,12 +262,9 @@ myApp.directive('plumbItem', ['$document', function($document) {
 		    }
 
 		    function mouseup(event) {
-		      	//$document.off('mousemove', mousemove);
 		      	$document.off('mouseup', mouseup);
 		      	dropX = event.pageX;
 		      	dropY = event.pageY;
-			    //console.log('clickX:' + clickX + ' clickY:' + clickY);
-			    //console.log('dropX:' + dropX + ' dropY:' + dropY);
 			    console.log('dragDistanceX:' + (dropX - clickX));
 			    console.log('dragDistanceY:' + (dropY - clickY));
 		      	console.log('startX:' + startX + ' startY:' + startY);
@@ -298,9 +308,12 @@ myApp.directive('plumbMenuItem', function() {
 			console.log("Add plumbing for the 'menu-item' element");
 
 			// jsPlumb uses the containment from the underlying library, in our case that is jQuery.
+
 			jsPlumb.draggable(element, {
-				//containment: element.parent().parent()
-				containment: "container"
+				clone:true,
+				stop: function(e){
+					scope.$parent.handleDrop(e);
+				}
 			});
 		}
 	};
@@ -313,9 +326,10 @@ myApp.directive('plumbConnect', function() {
 			console.log("Add plumbing for the 'connect' element");
 
 			jsPlumb.makeSource(element, {
-				parent: $(element).parent(),
+				parent: element.parent(),
 				anchor: 'Continuous',
 				isSource:true,
+				deleteEndpointsOnDetach:false,
 				connector:[ "Bezier", { stub:[40, 60], gap:10, cornerRadius:5, alwaysRespectStubs:true } ],								                
 				paintStyle:{ 
 					strokeStyle:"#7AB02C",
@@ -341,51 +355,4 @@ myApp.directive('plumbConnect', function() {
 	};
 });
 
-myApp.directive('droppable', function($compile) {
-	return {
-		restrict: 'A',
-		link: function(scope, element, attrs){
-			console.log("Make this element droppable");
-
-			element.droppable({
-				drop:function(event,ui) {
-					// angular uses angular.element to get jQuery element, subsequently data() of jQuery is used to get
-					// the data-identifier attribute
-					var dragIndex = angular.element(ui.draggable).data('identifier'),
-					dragEl = angular.element(ui.draggable),
-					dropEl = angular.element(this);
-
-					// if dragged item has class menu-item and dropped div has class drop-container, add module 
-					if (dragEl.hasClass('menu-item') && dropEl.hasClass('drop-container')) {
-						console.log("Drag event on " + dragIndex);
-						var offset = dropEl.offset();
-						var x = event.pageX - offset.left - (scope.module_css.width / 2);
-						var y = event.pageY - offset.top - (scope.module_css.height / 2);
-						//var x = event.pageX;
-						//var y = event.pageY - scope.module_css.height;
-						console.log('x:' + x + ' y:' + y + ' offsetTop:' + ui.offset.top + ' offsetLeft:' + ui.offset.left);
-						scope.addModuleToSchema(dragIndex, x, y);
-					}
-
-					scope.$apply();
-				}
-			});
-		}
-	};
-});
-
-myApp.directive('draggable', function() {
-	return {
-		// A = attribute, E = Element, C = Class and M = HTML Comment
-		restrict:'A',
-		//The link function is responsible for registering DOM listeners as well as updating the DOM.
-		link: function(scope, element, attrs) {
-			console.log("Let draggable item snap back to previous position");
-			element.draggable({
-				// let it go back to its original position
-				revert:true,
-			});
-		}
-	};
-});
 

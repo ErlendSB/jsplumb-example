@@ -1,14 +1,19 @@
+<!doctype html>
 <html>
 <head>
 <meta charset="UTF-8">
+<script type="text/javascript" src="../common/js/dom.jsPlumb-1.7.2-min.js"></script>
+<!--
+<script type="text/javascript" src="../common/js/jquery.jsPlumb-1.4.1-all-min.js"></script>
+-->
+<!--
 <script type="text/javascript" src="../common/js/jquery-1.9.0-min.js"></script>
 <script type="text/javascript" src="../common/js/jquery-ui-1.9.2-min.js"></script>
-<script type="text/javascript" src="../common/js/jquery.jsPlumb-1.4.1-all-min.js"></script>
-<!--
-<script type="text/javascript" src="../common/js/dom.jsPlumb-1.7.2-min.js"></script>
+<script type="text/javascript" src="../common/js/jquery.jsPlumb-1.7.2-min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular.js"></script>
 -->
 <!-- We get now a recent version of angularjs from a CDN -->
-<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular.js"></script>
+<script type="text/javascript" src="../common/js/angular.min.js"></script>
 <script type="text/javascript" src="js/example.js"></script>
 
 <link href="../common/css/bootstrap.min.css" rel="stylesheet">
@@ -30,16 +35,16 @@
 <tr>
 	<td>
 		<div id="menu-container">
-			<div plumb-menu-item class="menu-item" ng-repeat="module in library" ng-style="{ 'left':module.x, 'top':module.y }"
-				data-identifier="{{module.library_id}}" draggable>
+			<div plumb-menu-item class="menu-item" ng-repeat="module in library" ng-style="{ 'left':module.x +'px', 'top':module.y +'px' }"
+				data-identifier="{{module.library_id}}" draggable="true">
 				<div class="summary">{{module.title}}</div>
 			</div>
 		</div>
 		
 	</td>
 	<td>
-	<div id="container" class="drop-container" droppable>
-		<div plumb-item class="item" ng-repeat="module in schema.modules" ng-style="{ 'left':module.x, 'top':module.y }" data-identifier="{{module.schema_id}}">
+	<div id="container" class="drop-container" droppable="true">
+		<div plumb-item class="item" ng-repeat="module in schema.modules" ng-style="{ 'left':module.x + 'px', 'top':module.y +'px' }" data-identifier="{{module.schema_id}}">
 			<div class="closebutton"></div>
 			<div class="title">{{module.title}}</div>
 			{{module.description}}
