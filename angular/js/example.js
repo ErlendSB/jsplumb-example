@@ -56,7 +56,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 		$scope.schema.modules = [{"library_id":1,"schema_id":3,"title":"Camera","description":"Hooks up to hardware camera and sends out an image at 20 Hz","x":461,"y":246.5},{"library_id":0,"schema_id":4,"title":"Sum","description":"Aggregates an incoming sequences of values and returns the sum","x":150,"y":118.5}];	
 		//jsPlumb.doWhileSuspended(function() {
   			// import here - does not work
-		//	jsPlumb.connect({source:"jsPlumb_1_6", target:"jsPlumb_1_4"});
+  			//var sourceElement = document.querySelectorAll("[data-identifier='4']");
 		//});
 		$scope.library = [];
 		$scope.addModuleToLibrary("Sum", "Aggregates an incoming sequences of values and returns the sum", 
@@ -80,6 +80,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 	$scope.addModuleConnection = function(source_schema_id, target_schema_id) {
 		console.log("Add module connection " + source_schema_id + " to " + target_schema_id);
 		var c = new connection(source_schema_id, target_schema_id);
+		console.log($scope.schema.connections.indexOf(c))
 		$scope.schema.connections.push(c);
 		console.log($scope.schema.connections);
 
@@ -159,11 +160,11 @@ myApp.controller('PlumbCtrl', function($scope) {
 				]
 			});
 			jsPlumb.bind("connection", function (info) {
+					console.log(info.connection);
 				$scope.$apply(function () {
 					console.log(info.connection.source.getAttribute('data-identifier'));
 					var sourceSchemaId = info.connection.source.getAttribute('data-identifier');
 					var targetSchemaId = info.connection.target.getAttribute('data-identifier');
-					console.log(info.connection.source);
 					//$scope.addModuleConnection(info.sourceId, info.targetId);
 					$scope.addModuleConnection(sourceSchemaId, targetSchemaId);
 					console.log("Possibility to push connection into array");
@@ -216,7 +217,9 @@ myApp.directive('plumbItem', ['$document', function($document) {
 			var clickX = 0, clickY = 0, dropX = 0, dropY = 0, startX = scope.module.x,startY = scope.module.y, mouseX = 0, mouseY = 0;
 			var containerHeight = element[0].parentElement.offsetHeight, containerWidth = element[0].parentElement.offsetWidth;
 			var moduleHeight = scope.module_css.height, moduleWidth = scope.module_css.width;
-			
+			var schema_id = scope.module.schema_id;
+			jsPlumb.setId(element, 'module_' + schema_id + '_target');
+
 			jsPlumb.makeTarget(element, {
 				anchor: 'Continuous',
 				endpoint:"Dot",					
@@ -306,9 +309,6 @@ myApp.directive('plumbMenuItem', function() {
 		controller: 'PlumbCtrl',
 		link: function (scope, element, attrs) {
 			console.log("Add plumbing for the 'menu-item' element");
-
-			// jsPlumb uses the containment from the underlying library, in our case that is jQuery.
-
 			jsPlumb.draggable(element, {
 				clone:true,
 				stop: function(e){
@@ -319,12 +319,29 @@ myApp.directive('plumbMenuItem', function() {
 	};
 });
 
+myApp.directive('plumbConnection', function() {
+	return {
+		controller: 'PlumbCtrl',
+		link: function (scope, element, attrs) {
+			console.log("Add plumbing for the 'connection' element");
+			var source_schema_id = scope.connection.source_schema_id,
+			target_schema_id = scope.connection.target_schema_id;
+			console.log(scope.$parent.schema.connections);
+			//TODO: Fix this - show connection on first load
+			//jsPlumb.connect({source:"module_" + source_schema_id +"_target", target:"module_" +target_schema_id +"_target"});
+
+		}
+	};
+});
+
 myApp.directive('plumbConnect', function() {
 	return {
 		replace: true,
 		link: function (scope, element, attrs) {
 			console.log("Add plumbing for the 'connect' element");
 
+			var schema_id = scope.module.schema_id;
+			jsPlumb.setId(element, 'module_' + schema_id + '_source');
 			jsPlumb.makeSource(element, {
 				parent: element.parent(),
 				anchor: 'Continuous',
