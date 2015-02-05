@@ -49,6 +49,7 @@ div.closebutton {
 	position: absolute;        
 	border: 1px solid black;
 	width: 150px;
+	height:90px;
 	font-size: 80%;
     background-color:#FFFFFF;
 	text-align: center;

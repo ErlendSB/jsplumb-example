@@ -80,9 +80,8 @@ myApp.controller('PlumbCtrl', function($scope) {
 	$scope.addModuleConnection = function(source_schema_id, target_schema_id) {
 		console.log("Add module connection " + source_schema_id + " to " + target_schema_id);
 		var c = new connection(source_schema_id, target_schema_id);
-		console.log($scope.schema.connections.indexOf(c))
 		$scope.schema.connections.push(c);
-		console.log($scope.schema.connections);
+		$scope.$apply();
 
 	};
 
@@ -101,7 +100,6 @@ myApp.controller('PlumbCtrl', function($scope) {
 
 	// add a module to the schema
 	$scope.addModuleToSchema = function(library_id, posX, posY) {
-		console.log($scope.schema.modules);
 		console.log("Add module " + title + " to schema, at position " + posX + "," + posY);
 		var schema_id = $scope.schema_uuid++;
 		var title = "Unknown";
@@ -114,7 +112,6 @@ myApp.controller('PlumbCtrl', function($scope) {
 		}
 		var m = new module(library_id, schema_id, title, description, posX, posY);
 		$scope.schema.modules.push(m);
-		console.log($scope.schema.modules);
 	};
 
 	$scope.handleDrop = function(e){
@@ -159,20 +156,9 @@ myApp.controller('PlumbCtrl', function($scope) {
 					[ "Arrow", { location:1 } ]
 				]
 			});
+			jsPlumb.setContainer('container');
 			jsPlumb.bind("connection", function (info) {
-					console.log(info.connection);
-				$scope.$apply(function () {
-					console.log(info.connection.source.getAttribute('data-identifier'));
-					var sourceSchemaId = info.connection.source.getAttribute('data-identifier');
-					var targetSchemaId = info.connection.target.getAttribute('data-identifier');
-					//$scope.addModuleConnection(info.sourceId, info.targetId);
-					$scope.addModuleConnection(sourceSchemaId, targetSchemaId);
-					console.log("Possibility to push connection into array");
-					//Is this necessary?
-					jsPlumb.revalidate(info.connection.source);
-					jsPlumb.revalidate(info.connection.target);
-					////jsPlumb.repaint();
-				});
+
 			});
 			jsPlumb.bind("click", function(conn, originalEvent) {
 				if (confirm("Delete connection from " + conn.sourceId + " to " + conn.targetId + "?")){
@@ -218,10 +204,44 @@ myApp.directive('plumbItem', ['$document', function($document) {
 			var containerHeight = element[0].parentElement.offsetHeight, containerWidth = element[0].parentElement.offsetWidth;
 			var moduleHeight = scope.module_css.height, moduleWidth = scope.module_css.width;
 			var schema_id = scope.module.schema_id;
-			jsPlumb.setId(element, 'module_' + schema_id + '_target');
+			//jsPlumb.setId(element, 'module_' + schema_id + '_target');
+			
+			element[0].style.left = scope.module.x + 'px';
+			element[0].style.top = scope.module.y + 'px';
 
+			var exampleGreyEndpointOptions = {
+			  	endpoint:"Dot",
+			  	paintStyle:{ width:25, height:21, fillStyle:'#666' },
+			   	connectorStyle : { strokeStyle:"#666" },
+			  	beforeDrop:function(event){
+					if (event.sourceId == event.targetId) //Prevent loopback
+						return false;
+					else{
+						var sourceSchemaId = event.connection.source.getAttribute('data-identifier');
+						var targetSchemaId = event.connection.target.getAttribute('data-identifier');
+						scope.$parent.addModuleConnection(sourceSchemaId, targetSchemaId)
+						return true;
+					}
+				}
+			};
+			jsPlumb.addEndpoint(element, { 
+			  	anchor:"Bottom",
+			  	isSource:true,
+			  	uuid:'module_' + schema_id + '_source'
+
+			}, exampleGreyEndpointOptions); 
+
+			jsPlumb.addEndpoint(element, { 
+			  	anchor:"Top", 
+			  	isTarget:true,
+			  	uuid:'module_' + schema_id + '_target'
+
+			}, exampleGreyEndpointOptions);
+
+
+/*
 			jsPlumb.makeTarget(element, {
-				anchor: 'Continuous',
+				anchor: 'Top',
 				endpoint:"Dot",					
 				paintStyle:{ fillStyle:"#7AB02C",radius:11 },
 				ConnectionsDetachable:true,
@@ -236,7 +256,7 @@ myApp.directive('plumbItem', ['$document', function($document) {
 					}
 				}
 			});
-
+*/
 			jsPlumb.draggable(element, {
 				containment: 'parent'
 			});
@@ -321,55 +341,20 @@ myApp.directive('plumbMenuItem', function() {
 
 myApp.directive('plumbConnection', function() {
 	return {
+		replace: true,
 		controller: 'PlumbCtrl',
 		link: function (scope, element, attrs) {
 			console.log("Add plumbing for the 'connection' element");
 			var source_schema_id = scope.connection.source_schema_id,
 			target_schema_id = scope.connection.target_schema_id;
 			console.log(scope.$parent.schema.connections);
-			//TODO: Fix this - show connection on first load
-			//jsPlumb.connect({source:"module_" + source_schema_id +"_target", target:"module_" +target_schema_id +"_target"});
-
-		}
-	};
-});
-
-myApp.directive('plumbConnect', function() {
-	return {
-		replace: true,
-		link: function (scope, element, attrs) {
-			console.log("Add plumbing for the 'connect' element");
-
-			var schema_id = scope.module.schema_id;
-			jsPlumb.setId(element, 'module_' + schema_id + '_source');
-			jsPlumb.makeSource(element, {
-				parent: element.parent(),
-				anchor: 'Continuous',
-				isSource:true,
-				deleteEndpointsOnDetach:false,
-				connector:[ "Bezier", { stub:[40, 60], gap:10, cornerRadius:5, alwaysRespectStubs:true } ],								                
-				paintStyle:{ 
-					strokeStyle:"#7AB02C",
-					fillStyle:"transparent",
-					radius:7,
-					lineWidth:3 
-				},
-				connectorStyle:{
-					lineWidth:4,
-					strokeStyle:"#61B7CF",
-					joinstyle:"round",
-					outlineColor:"transparent",
-					outlineWidth:2
-				},
-				connectorHoverStyle:{
-					lineWidth:4,
-					strokeStyle:"#216477",
-					outlineWidth:2,
-					outlineColor:"transparent"
-				}
+			jsPlumb.connect({
+				uuids:["module_" + source_schema_id +"_source","module_" + target_schema_id +"_target"]
 			});
+
 		}
 	};
 });
+
 
 
