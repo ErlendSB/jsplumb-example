@@ -62,8 +62,10 @@
 
 	<button type="button" class="btn btn-primary" ng-click="redraw()">Redraw</button>
 	</p>
-	</pre>{{schema}}<pre>
-	</pre>{{schema.connections}}<pre>
+	<pre>
+{{schema | json}}
+	</pre>
+	<pre>{{schema.connections}}</pre>
 	<!--  does not render what comes behind it, so it's probably wrong -->
 	<div post-render></div>
 

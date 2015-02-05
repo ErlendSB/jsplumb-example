@@ -209,10 +209,33 @@ myApp.directive('plumbItem', ['$document', function($document) {
 			element[0].style.left = scope.module.x + 'px';
 			element[0].style.top = scope.module.y + 'px';
 
-			var exampleGreyEndpointOptions = {
+			// this is the paint style for the connecting lines..
+			var connectorPaintStyle = {
+				lineWidth:4,
+				strokeStyle:"#666",
+				joinstyle:"round",
+				outlineColor:"transparent",
+				outlineWidth:0
+			},
+			// .. and this is the hover style. 
+			connectorHoverStyle = {
+				lineWidth:4,
+				strokeStyle:"#216477",
+				outlineWidth:0,
+				outlineColor:"transparent"
+			},
+			endpointHoverStyle = {
+				fillStyle:"#216477",
+				strokeStyle:"#216477"
+			}
+
+			var endpointOptions = {
 			  	endpoint:"Dot",
 			  	paintStyle:{ width:25, height:21, fillStyle:'#666' },
 			   	connectorStyle : { strokeStyle:"#666" },
+				connectorStyle:connectorPaintStyle,
+				hoverPaintStyle:endpointHoverStyle,
+				connectorHoverStyle:connectorHoverStyle,
 			  	beforeDrop:function(event){
 					if (event.sourceId == event.targetId) //Prevent loopback
 						return false;
@@ -224,19 +247,22 @@ myApp.directive('plumbItem', ['$document', function($document) {
 					}
 				}
 			};
+
+
 			jsPlumb.addEndpoint(element, { 
 			  	anchor:"Bottom",
 			  	isSource:true,
 			  	uuid:'module_' + schema_id + '_source'
 
-			}, exampleGreyEndpointOptions); 
+			}, endpointOptions); 
 
 			jsPlumb.addEndpoint(element, { 
 			  	anchor:"Top", 
 			  	isTarget:true,
+			  	dropOptions:{ hoverClass:"hover", activeClass:"active" },
 			  	uuid:'module_' + schema_id + '_target'
 
-			}, exampleGreyEndpointOptions);
+			}, endpointOptions);
 
 
 /*
@@ -260,10 +286,16 @@ myApp.directive('plumbItem', ['$document', function($document) {
 			jsPlumb.draggable(element, {
 				containment: 'parent'
 			});
+
+			element.bind('dblclick',function(){
+				alert('Module settings are coming here');
+			});
 			// this should actually done by a AngularJS template and subsequently a controller attached to the dbl-click event
 			var closebutton = angular.element(element[0].querySelector('.closebutton'));
 			closebutton.bind('click', function(e) {
+				
 				jsPlumb.detachAllConnections(element);
+				jsPlumb.removeAllEndpoints(element);
 				// stop event propagation, so it does not directly generate a new state
 				e.stopPropagation();
 				//we need the scope of the parent, here assuming <plumb-item> is part of the <plumbApp>			

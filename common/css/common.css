@@ -45,6 +45,9 @@ div.closebutton {
    background-repeat:no-repeat;
    background-position:center;
 }
+.item:hover{
+	border:1px solid red;
+}
 .item {
 	position: absolute;        
 	border: 1px solid black;
