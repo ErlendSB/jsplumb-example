@@ -4,16 +4,17 @@ var myApp = angular.module('plumbApp', []);
 myApp.controller('PlumbCtrl', function($scope) {
 
 	// define a module with library id, schema id, etc.
-	function module(library_id, schema_id, title, description, x, y) {
+	function module(library_id, schema_id, type, title, description, x, y) {
 		this.library_id = library_id;
 		this.schema_id = schema_id;
+		this.type = type;
 		this.title = title;
 		this.description = description;
 		this.x = x;
 		this.y = y;
 	}
 
-	function connection(source_schema_id, target_schema_id ) {
+	function connection(source_schema_id, target_schema_id) {
 		this.source_schema_id = source_schema_id;
 		this.target_schema_id = target_schema_id;
 	}
@@ -22,7 +23,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 	$scope.library = [];
 
 	// library_uuid is a unique identifier per module type in the library
-	$scope.library_uuid = 0; 
+	$scope.library_uuid = 0;
 
 	// state is [identifier, x position, y position, title, description]
 	$scope.schema = {};
@@ -31,19 +32,19 @@ myApp.controller('PlumbCtrl', function($scope) {
 	$scope.schema.connections = [];
 
 	// schema_uuid should always yield a unique identifier, can never be decreased
-	$scope.schema_uuid = 0; 
+	$scope.schema_uuid = 0;
 
 	// todo: find out how to go back and forth between css and angular
 	$scope.library_topleft = {
-			x: 15,
-			y: 145,
-			item_height: 50,
-			margin: 5,
+		x: 15,
+		y: 145,
+		item_height: 50,
+		margin: 5,
 	};
 
 	$scope.module_css = {
-			width: 154,
-			height: 109, // actually variable
+		width: 154,
+		height: 109, // actually variable
 	};
 
 
@@ -52,27 +53,54 @@ myApp.controller('PlumbCtrl', function($scope) {
 		jsPlumb.detachEveryConnection();
 		$scope.schema.modules = [];
 		$scope.schema.connections = [];
-		$scope.schema.connections = [{"source_schema_id":"4","target_schema_id":"3"}];
-		$scope.schema.modules = [{"library_id":1,"schema_id":3,"title":"Camera","description":"Hooks up to hardware camera and sends out an image at 20 Hz","x":461,"y":246.5},{"library_id":0,"schema_id":4,"title":"Sum","description":"Aggregates an incoming sequences of values and returns the sum","x":150,"y":118.5}];	
+		$scope.schema.connections = [{
+			"source_schema_id": "4",
+			"target_schema_id": "3"
+		}];
+		$scope.schema.modules = [{
+			"library_id": 1,
+			"schema_id": 3,
+			"type": "type1",
+			"title": "Camera",
+			"description": "Hooks up to hardware camera and sends out an image at 20 Hz",
+			"x": 724,
+			"y": 312
+		}, {
+			"library_id": 1,
+			"schema_id": 4,
+			"type": "type1",
+			"title": "Camera",
+			"description": "Hooks up to hardware camera and sends out an image at 20 Hz",
+			"x": 403,
+			"y": 125
+		}, {
+			"library_id": 0,
+			"schema_id": 5,
+			"type": "type2",
+			"title": "Sum",
+			"description": "Aggregates an incoming sequences of values and returns the sum",
+			"x": 150,
+			"y": 118.5
+		}];
 		//jsPlumb.doWhileSuspended(function() {
-  			// import here - does not work
-  			//var sourceElement = document.querySelectorAll("[data-identifier='4']");
+		// import here - does not work
+		//var sourceElement = document.querySelectorAll("[data-identifier='4']");
 		//});
 		$scope.library = [];
-		$scope.addModuleToLibrary("Sum", "Aggregates an incoming sequences of values and returns the sum", 
-				$scope.library_topleft.x+$scope.library_topleft.margin, 
-				$scope.library_topleft.y+$scope.library_topleft.margin);
-		$scope.addModuleToLibrary("Camera", "Hooks up to hardware camera and sends out an image at 20 Hz", 
-				$scope.library_topleft.x+$scope.library_topleft.margin, 
-				$scope.library_topleft.y+$scope.library_topleft.margin+$scope.library_topleft.item_height);	
+		$scope.addModuleToLibrary("Sum", "Aggregates an incoming sequences of values and returns the sum", "type2",
+			$scope.library_topleft.x + $scope.library_topleft.margin,
+			$scope.library_topleft.y + $scope.library_topleft.margin);
+		$scope.addModuleToLibrary("Camera", "Hooks up to hardware camera and sends out an image at 20 Hz", "type1",
+			$scope.library_topleft.x + $scope.library_topleft.margin,
+			$scope.library_topleft.y + $scope.library_topleft.margin + $scope.library_topleft.item_height);
 	};
 
 	// add a module to the library
-	$scope.addModuleToLibrary = function(title, description, posX, posY) {
+	$scope.addModuleToLibrary = function(title, description, type, posX, posY) {
 		console.log("Add module " + title + " to library, at position " + posX + "," + posY);
 		var library_id = $scope.library_uuid++;
 		var schema_id = -1;
-		var m = new module(library_id, schema_id, title, description, posX, posY);
+		var m = new module(library_id, schema_id, type, title, description, posX, posY);
 		$scope.library.push(m);
 	};
 
@@ -108,16 +136,17 @@ myApp.controller('PlumbCtrl', function($scope) {
 			if ($scope.library[i].library_id == library_id) {
 				title = $scope.library[i].title;
 				description = $scope.library[i].description;
+				type = $scope.library[i].type;
 			}
 		}
-		var m = new module(library_id, schema_id, title, description, posX, posY);
+		var m = new module(library_id, schema_id, type, title, description, posX, posY);
 		$scope.schema.modules.push(m);
 	};
 
-	$scope.handleDrop = function(e){
+	$scope.handleDrop = function(e) {
 		var dragEl = e.el,
-		dragIndex = dragEl.getAttribute('data-identifier'),
-		dropEl = document.getElementById('container');
+			dragIndex = dragEl.getAttribute('data-identifier'),
+			dropEl = document.getElementById('container');
 
 		if (dragEl.classList.contains('menu-item')) {
 			console.log("Drag event on " + dragIndex);
@@ -126,7 +155,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 			$scope.addModuleToSchema(dragIndex, x, y);
 			$scope.$apply();
 		}
-    };
+	};
 
 	$scope.removeState = function(schema_id) {
 		console.log("Remove state " + schema_id + " in array of length " + $scope.schema.modules.length);
@@ -135,7 +164,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 			if ($scope.schema.modules[i].schema_id == schema_id) {
 				console.log("Remove module at position " + i);
 				var j = $scope.schema.connections.length;
-				while(j--) {
+				while (j--) {
 					console.log($scope.schema.connections[j]);
 					if ($scope.schema.connections[j].source_schema_id == schema_id || $scope.schema.connections[j].target_schema_id == schema_id) {
 						console.log("Remove connections at position " + j);
@@ -151,95 +180,124 @@ myApp.controller('PlumbCtrl', function($scope) {
 		jsPlumb.bind("ready", function() {
 			console.log("Set up jsPlumb listeners (should be only done once)");
 			jsPlumb.importDefaults({
-				//Connector:"Straight",
-				ConnectionOverlays : [
-					[ "Arrow", { location:1 } ]
+				Connector: "Bezier",
+				ConnectionOverlays: [
+					["Arrow", {
+						location: 1
+					}],
+					["Custom", {
+						create: function(component) {
+							return angular.element("<img src='http://dialog.isave.no/mrm/scripts/wireit/images/cut.png'>");
+						},
+						location: 0.5,
+						id: "deleteConnectionOverlay",
+						events: {
+							click: function(labelOverlay, originalEvent) {
+								var conn = labelOverlay.component;
+								console.log(labelOverlay);
+								//alert("you clicked on the label overlay for this connection :" + labelOverlay.connection);
+								//if (confirm("Delete connection from " + conn.sourceId + " to " + conn.targetId + "?")){
+								jsPlumb.detach(conn);
+								$scope.$apply(function() {
+									var sourceSchemaId = document.getElementById(conn.sourceId).getAttribute('data-identifier');
+									var targetSchemaId = document.getElementById(conn.targetId).getAttribute('data-identifier');
+									$scope.removeModuleConnection(sourceSchemaId, targetSchemaId);
+								});
+								//}
+
+							}
+						}
+					}]
+
 				]
 			});
 			jsPlumb.setContainer('container');
-			jsPlumb.bind("connection", function (info) {
+			jsPlumb.bind("connection", function(info) {
 
 			});
-			jsPlumb.bind("click", function(conn, originalEvent) {
-				if (confirm("Delete connection from " + conn.sourceId + " to " + conn.targetId + "?")){
-					jsPlumb.detach(conn);
-					$scope.$apply(function () {
-						var sourceSchemaId = document.getElementById(conn.sourceId).getAttribute('data-identifier');
-						var targetSchemaId = document.getElementById(conn.targetId).getAttribute('data-identifier');
-						$scope.removeModuleConnection(sourceSchemaId,targetSchemaId);
-					});
-				}
-			});
-
-
 
 		});
 	}
 });
 
-myApp.directive('postRender', [ '$timeout', function($timeout) {
+myApp.directive('postRender', ['$timeout', function($timeout) {
 	var def = {
-			restrict : 'A', 
-			terminal : true,
-			transclude : true,
-			link : function(scope, element, attrs) {
-				$timeout(scope.redraw, 0);  //Calling a scoped method
-			}
+		restrict: 'A',
+		terminal: true,
+		transclude: true,
+		link: function(scope, element, attrs) {
+			$timeout(scope.redraw, 0); //Calling a scoped method
+		}
 	};
 	return def;
 }]);
 
 
 //directives link user interactions with $scope behaviours
-//now we extend html with <div plumb-item>, we can define a template <> to replace it with "proper" html, or we can 
-//replace it with something more sophisticated, e.g. setting jsPlumb arguments and attach it to a double-click 
+//now we extend html with <div plumb-item>, we can define a template <> to replace it with "proper" html, or we can
+//replace it with something more sophisticated, e.g. setting jsPlumb arguments and attach it to a double-click
 //event
 myApp.directive('plumbItem', ['$document', function($document) {
 	return {
 		replace: true,
 		controller: 'PlumbCtrl',
-		link: function (scope, element, attrs) {
+		link: function(scope, element, attrs) {
 			console.log("Add plumbing for the 'item' element");
-			var clickX = 0, clickY = 0, dropX = 0, dropY = 0, startX = scope.module.x,startY = scope.module.y, mouseX = 0, mouseY = 0;
-			var containerHeight = element[0].parentElement.offsetHeight, containerWidth = element[0].parentElement.offsetWidth;
-			var moduleHeight = scope.module_css.height, moduleWidth = scope.module_css.width;
+			var clickX = 0,
+				clickY = 0,
+				dropX = 0,
+				dropY = 0,
+				startX = scope.module.x,
+				startY = scope.module.y,
+				mouseX = 0,
+				mouseY = 0;
+			var containerHeight = element[0].parentElement.offsetHeight,
+				containerWidth = element[0].parentElement.offsetWidth;
+			var moduleHeight = scope.module_css.height,
+				moduleWidth = scope.module_css.width;
 			var schema_id = scope.module.schema_id;
 			//jsPlumb.setId(element, 'module_' + schema_id + '_target');
-			
+
 			element[0].style.left = scope.module.x + 'px';
 			element[0].style.top = scope.module.y + 'px';
 
 			// this is the paint style for the connecting lines..
 			var connectorPaintStyle = {
-				lineWidth:4,
-				strokeStyle:"#666",
-				joinstyle:"round",
-				outlineColor:"transparent",
-				outlineWidth:0
-			},
-			// .. and this is the hover style. 
-			connectorHoverStyle = {
-				lineWidth:4,
-				strokeStyle:"#216477",
-				outlineWidth:0,
-				outlineColor:"transparent"
-			},
-			endpointHoverStyle = {
-				fillStyle:"#216477",
-				strokeStyle:"#216477"
-			}
+					lineWidth: 4,
+					strokeStyle: "#666",
+					joinstyle: "round",
+					outlineColor: "transparent",
+					outlineWidth: 0
+				},
+				// .. and this is the hover style.
+				connectorHoverStyle = {
+					lineWidth: 4,
+					strokeStyle: "#216477",
+					outlineWidth: 0,
+					outlineColor: "transparent"
+				},
+				endpointHoverStyle = {
+					fillStyle: "#216477",
+					strokeStyle: "#216477"
+				};
 
 			var endpointOptions = {
-			  	endpoint:"Dot",
-			  	paintStyle:{ width:25, height:21, fillStyle:'#666' },
-			   	connectorStyle : { strokeStyle:"#666" },
-				connectorStyle:connectorPaintStyle,
-				hoverPaintStyle:endpointHoverStyle,
-				connectorHoverStyle:connectorHoverStyle,
-			  	beforeDrop:function(event){
+				endpoint: "Dot",
+				paintStyle: {
+					width: 25,
+					height: 21,
+					fillStyle: '#666'
+				},
+				connectorStyle: {
+					strokeStyle: "#666"
+				},
+				connectorStyle: connectorPaintStyle,
+				hoverPaintStyle: endpointHoverStyle,
+				connectorHoverStyle: connectorHoverStyle,
+				beforeDrop: function(event) {
 					if (event.sourceId == event.targetId) //Prevent loopback
 						return false;
-					else{
+					else {
 						var sourceSchemaId = event.connection.source.getAttribute('data-identifier');
 						var targetSchemaId = event.connection.target.getAttribute('data-identifier');
 						scope.$parent.addModuleConnection(sourceSchemaId, targetSchemaId)
@@ -249,103 +307,119 @@ myApp.directive('plumbItem', ['$document', function($document) {
 			};
 
 
-			jsPlumb.addEndpoint(element, { 
-			  	anchor:"Bottom",
-			  	isSource:true,
-			  	uuid:'module_' + schema_id + '_source'
-
-			}, endpointOptions); 
-
-			jsPlumb.addEndpoint(element, { 
-			  	anchor:"Top", 
-			  	isTarget:true,
-			  	dropOptions:{ hoverClass:"hover", activeClass:"active" },
-			  	uuid:'module_' + schema_id + '_target'
+			jsPlumb.addEndpoint(element, {
+				anchor: "Bottom",
+				isSource: true,
+				paintStyle:{
+					strokeStyle:"#7AB02C",
+					fillStyle:"transparent",
+					radius:7,
+					lineWidth:3
+				},
+				cssClass:'sourceEndpoint',
+				uuid: 'module_' + schema_id + '_source'
 
 			}, endpointOptions);
 
+			jsPlumb.addEndpoint(element, {
+				anchor: "Top",
+				isTarget: true,
+				paintStyle:{
+					strokeStyle:"#666",
+					fillStyle:"transparent",
+					radius:7,
+					lineWidth:3
+				},
+				cssClass:'targetEndpoint',
+				dropOptions: {
+					hoverClass: "hover",
+					activeClass: "active"
+				},
+				uuid: 'module_' + schema_id + '_target'
+			}, endpointOptions);
 
-/*
-			jsPlumb.makeTarget(element, {
-				anchor: 'Top',
-				endpoint:"Dot",					
-				paintStyle:{ fillStyle:"#7AB02C",radius:11 },
-				ConnectionsDetachable:true,
-				deleteEndpointsOnDetach:false,
-				isTarget:true,
-				maxConnections: 1,
-				beforeDrop:function(event){
-					if (event.sourceId == event.targetId) //Prevent loopback
-						return false;
-					else{
-						return true;
-					}
-				}
-			});
-*/
+
+			/*
+						jsPlumb.makeTarget(element, {
+							anchor: 'Top',
+							endpoint:"Dot",
+							paintStyle:{ fillStyle:"#7AB02C",radius:11 },
+							ConnectionsDetachable:true,
+							deleteEndpointsOnDetach:false,
+							isTarget:true,
+							maxConnections: 1,
+							beforeDrop:function(event){
+								if (event.sourceId == event.targetId) //Prevent loopback
+									return false;
+								else{
+									return true;
+								}
+							}
+						});
+			*/
 			jsPlumb.draggable(element, {
 				containment: 'parent'
 			});
 
-			element.bind('dblclick',function(){
+			element.bind('dblclick', function() {
 				alert('Module settings are coming here');
 			});
 			// this should actually done by a AngularJS template and subsequently a controller attached to the dbl-click event
 			var closebutton = angular.element(element[0].querySelector('.closebutton'));
 			closebutton.bind('click', function(e) {
-				
+
 				jsPlumb.detachAllConnections(element);
 				jsPlumb.removeAllEndpoints(element);
 				// stop event propagation, so it does not directly generate a new state
 				e.stopPropagation();
-				//we need the scope of the parent, here assuming <plumb-item> is part of the <plumbApp>			
+				//we need the scope of the parent, here assuming <plumb-item> is part of the <plumbApp>
 				scope.$parent.removeState(attrs.identifier);
 				scope.$parent.$digest();
 			});
 
 			element.on('mousedown', function(event) {
-		      // Prevent default dragging of selected content
-		      event.preventDefault();
-		      clickX = event.pageX;
-		      clickY = event.pageY;
-		      if (!angular.element(event.target).hasClass('connect'))
-		      	$document.on('mouseup', mouseup);
-		    });
+				// Prevent default dragging of selected content
+				event.preventDefault();
+				clickX = event.pageX;
+				clickY = event.pageY;
+				if (!angular.element(event.target).hasClass('connect'))
+					$document.on('mouseup', mouseup);
+			});
 
-		    function mousemove(event) {
+			function mousemove(event) {
 
-		    }
+			}
 
-		    function mouseup(event) {
-		      	$document.off('mouseup', mouseup);
-		      	dropX = event.pageX;
-		      	dropY = event.pageY;
-			    console.log('dragDistanceX:' + (dropX - clickX));
-			    console.log('dragDistanceY:' + (dropY - clickY));
-		      	console.log('startX:' + startX + ' startY:' + startY);
+			function mouseup(event) {
+				$document.off('mouseup', mouseup);
+				dropX = event.pageX;
+				dropY = event.pageY;
+				console.log('dragDistanceX:' + (dropX - clickX));
+				console.log('dragDistanceY:' + (dropY - clickY));
+				console.log('startX:' + startX + ' startY:' + startY);
 
-			  	startX = startX + (dropX - clickX);
-		      	startY = startY + (dropY - clickY);
-		      	console.log('containerWidth:' + containerWidth + ' moduleWidth:' + moduleWidth);
-		      	console.log('containerHeight:' + containerHeight + ' moduleHeight:' + moduleHeight);
-		      	if (startX < 0)
-		      		startX = 0;
+				startX = startX + (dropX - clickX);
+				startY = startY + (dropY - clickY);
+				console.log('containerWidth:' + containerWidth + ' moduleWidth:' + moduleWidth);
+				console.log('containerHeight:' + containerHeight + ' moduleHeight:' + moduleHeight);
+				if (startX < 0)
+					startX = 0;
 
-		      	if (startX > (containerWidth - moduleWidth))
-		      		startX = containerWidth - moduleWidth;
+				if (startX > (containerWidth - moduleWidth))
+					startX = containerWidth - moduleWidth;
 
-		      	if (startY > (containerHeight - moduleHeight))
-		      		startY = containerHeight - moduleHeight;
+				if (startY > (containerHeight - moduleHeight))
+					startY = containerHeight - moduleHeight;
 
-		      	if (startY < 0)
-		      		startY = 0;
+				if (startY < 0)
+					startY = 0;
 
-		      	console.log('startX(after):' + startX + ' startY(after):' + startY);
+				console.log('startX(after):' + startX + ' startY(after):' + startY);
 
-		      	scope.module.x = startX;
-		      	scope.module.y = startY;
-		      	scope.$apply();
-		    }
+				scope.module.x = startX;
+				scope.module.y = startY;
+				scope.$apply();
+			}
 
 		}
 	};
@@ -359,11 +433,11 @@ myApp.directive('plumbMenuItem', function() {
 	return {
 		replace: true,
 		controller: 'PlumbCtrl',
-		link: function (scope, element, attrs) {
+		link: function(scope, element, attrs) {
 			console.log("Add plumbing for the 'menu-item' element");
 			jsPlumb.draggable(element, {
-				clone:true,
-				stop: function(e){
+				clone: true,
+				stop: function(e) {
 					scope.$parent.handleDrop(e);
 				}
 			});
@@ -375,18 +449,15 @@ myApp.directive('plumbConnection', function() {
 	return {
 		replace: true,
 		controller: 'PlumbCtrl',
-		link: function (scope, element, attrs) {
+		link: function(scope, element, attrs) {
 			console.log("Add plumbing for the 'connection' element");
 			var source_schema_id = scope.connection.source_schema_id,
-			target_schema_id = scope.connection.target_schema_id;
+				target_schema_id = scope.connection.target_schema_id;
 			console.log(scope.$parent.schema.connections);
 			jsPlumb.connect({
-				uuids:["module_" + source_schema_id +"_source","module_" + target_schema_id +"_target"]
+				uuids: ["module_" + source_schema_id + "_source", "module_" + target_schema_id + "_target"]
 			});
 
 		}
 	};
 });
-
-
-
