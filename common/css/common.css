@@ -3,6 +3,11 @@
 	cursor: move;
 	font-weight: bold;
 	font-size: 120%;
+	float: left;
+	height: 100%;
+	width: 60px;
+	background-color: #A074BE;
+	border-radius: 2px 0px 0px 2px;
 }
 
 .connect {
@@ -15,8 +20,8 @@
 .summary {
 	padding: 10px;
 	cursor: move;
-	font-weight: bold;
-	font-size: 120%;
+	text-align: left;
+	margin-left: 60px;
 }
 
 .menu-item {
@@ -31,37 +36,44 @@
 	box-shadow: 2px 2px 3px 1px #AAA;
 }
 div.closebutton {
-   background-image: url(http://images.isave.no/mrm/images/close2.png);
+	display: none;
+   /*background-image: url(http://images.isave.no/mrm/images/close2.png);*/
    width: 15px;
    height: 15px;
    position: absolute;
-   top: -4px;
-   right: -4px;
+   top: 4px;
+   right: 2px;
    cursor: pointer;
    border-radius:10px;
-   background-color:purple;
    background-position-x:3px;
    background-position-y:3px;
    background-repeat:no-repeat;
    background-position:center;
 }
 .item:hover{
+	/*
 	-moz-box-shadow: 5px 5px 3px 1px #AAA;
 	-webkit-box-shadow: 5px 5px 3px 1px #AAA;
 	box-shadow: 5px 5px 3px 1px #AAA;
+	*/
+}
+.item:hover .closebutton{
+	display: block;
 }
 .item {
 	position: absolute;
-	border: 1px solid black;
-	width: 150px;
-	height:90px;
+	width: 260px;
+	height:60px;
 	font-size: 80%;
     background-color:#FFFFFF;
 	text-align: center;
+	/*
 	-moz-box-shadow: 2px 2px 3px 1px #AAA;
 	-webkit-box-shadow: 2px 2px 3px 1px #AAA;
 	box-shadow: 2px 2px 3px 1px #AAA;
-	cursor: none;
+	*/
+	cursor: move;
+	border-radius: 0px 2px 2px 0px;
 }
 
 /* the container is 200px (size of menu-container) plus 3 times 250px + 2px per border*/
@@ -70,6 +82,7 @@ div.closebutton {
 	width: 958px;
 	height: 500px;
 	position: relative;
+	background-color: #EBEBEB;
 }
 
 /* the menu is 200px wide */
@@ -91,23 +104,24 @@ div.closebutton {
 path, ._jsPlumb_endpoint { cursor:pointer; }
 ._jsPlumb_overlay{
 	cursor: pointer;
+	background-color: transparent;
 }
 .sourceEndpoint{
 
 }
 .sourceEndpoint._jsPlumb_endpoint_connected svg circle{
-	fill:#7AB02C;
+	fill:#ccc;
 }
 .targetEndpoint svg circle{
 	fill:"transparent";
 }
 .targetEndpoint._jsPlumb_endpoint_connected svg circle{
-	fill:#666;
+	fill:#ccc;
 }
 .jsplumb-drag-active{
 	opacity: .5;
 }
 .jsplumb-droppable.active svg circle{
-	fill:#666;
+	fill:#ccc;
 }
 

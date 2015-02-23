@@ -43,8 +43,8 @@ myApp.controller('PlumbCtrl', function($scope) {
 	};
 
 	$scope.module_css = {
-		width: 154,
-		height: 109, // actually variable
+		width: 264,
+		height: 69, // actually variable
 	};
 
 
@@ -63,8 +63,8 @@ myApp.controller('PlumbCtrl', function($scope) {
 			"type": "type1",
 			"title": "Camera",
 			"description": "Hooks up to hardware camera and sends out an image at 20 Hz",
-			"x": 724,
-			"y": 312
+			"x": 656,
+			"y": 322
 		}, {
 			"library_id": 1,
 			"schema_id": 4,
@@ -79,8 +79,8 @@ myApp.controller('PlumbCtrl', function($scope) {
 			"type": "type2",
 			"title": "Sum",
 			"description": "Aggregates an incoming sequences of values and returns the sum",
-			"x": 150,
-			"y": 118.5
+			"x": 60,
+			"y": 78
 		}];
 		//jsPlumb.doWhileSuspended(function() {
 		// import here - does not work
@@ -182,9 +182,9 @@ myApp.controller('PlumbCtrl', function($scope) {
 			jsPlumb.importDefaults({
 				Connector: "Bezier",
 				ConnectionOverlays: [
-					["Arrow", {
-						location: 1
-					}],
+					//["Arrow", {
+					//	location: 1
+					//}],
 					["Custom", {
 						create: function(component) {
 							return angular.element("<img src='http://dialog.isave.no/mrm/scripts/wireit/images/cut.png'>");
@@ -264,7 +264,7 @@ myApp.directive('plumbItem', ['$document', function($document) {
 			// this is the paint style for the connecting lines..
 			var connectorPaintStyle = {
 					lineWidth: 4,
-					strokeStyle: "#666",
+					strokeStyle: "#ccc",
 					joinstyle: "round",
 					outlineColor: "transparent",
 					outlineWidth: 0
@@ -286,10 +286,10 @@ myApp.directive('plumbItem', ['$document', function($document) {
 				paintStyle: {
 					width: 25,
 					height: 21,
-					fillStyle: '#666'
+					fillStyle: '#ccc'
 				},
 				connectorStyle: {
-					strokeStyle: "#666"
+					strokeStyle: "#ccc"
 				},
 				connectorStyle: connectorPaintStyle,
 				hoverPaintStyle: endpointHoverStyle,
@@ -309,9 +309,10 @@ myApp.directive('plumbItem', ['$document', function($document) {
 
 			jsPlumb.addEndpoint(element, {
 				anchor: "Bottom",
+				maxConnections:-1,
 				isSource: true,
 				paintStyle:{
-					strokeStyle:"#7AB02C",
+					strokeStyle:"#ccc",
 					fillStyle:"transparent",
 					radius:7,
 					lineWidth:3
@@ -324,8 +325,9 @@ myApp.directive('plumbItem', ['$document', function($document) {
 			jsPlumb.addEndpoint(element, {
 				anchor: "Top",
 				isTarget: true,
+				maxConnections:-1,
 				paintStyle:{
-					strokeStyle:"#666",
+					strokeStyle:"#ccc",
 					fillStyle:"transparent",
 					radius:7,
 					lineWidth:3
