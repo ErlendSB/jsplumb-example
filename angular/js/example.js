@@ -200,7 +200,12 @@ myApp.controller('PlumbCtrl', function($scope) {
 								console.log("Overlay click:",conn);
 								//alert("you clicked on the label overlay for this connection :" + labelOverlay.connection);
 								//if (confirm("Delete connection from " + conn.sourceId + " to " + conn.targetId + "?")){
-								jsPlumb.detach(conn);
+								var conns = jsPlumb.getConnections({source:conn.sourceId, target:conn.targetId });
+								console.log(conns);
+								for (var i = 0; i < conns.length; i++){
+   									jsPlumb.detach(conns[i]);
+								}
+								//jsPlumb.detach(conn);
 								$scope.$apply(function() {
 									var sourceSchemaId = document.getElementById(conn.sourceId).getAttribute('data-identifier');
 									var targetSchemaId = document.getElementById(conn.targetId).getAttribute('data-identifier');
