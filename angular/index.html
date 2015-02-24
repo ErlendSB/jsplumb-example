@@ -15,13 +15,6 @@
 
 <body ng-app="plumbApp">
 <div ng-controller="PlumbCtrl">
-	<h1>Getting started with jsPlumb</h1>
-	<p>
-	From the blog by <a href="http://blog.emielhollander.nl/2013/01/getting-started-with-jsplumb/">Emiel Hollander</a>. An
-	experiment to see if I can get AngularJS to work together with jsPlumb.
-	</p>
-	<p>This example uses AngularJS as well as jQuery (hard to do without). Click or double-click in the container to
-	find out.</p>
 <table>
 <tr>
 	<td>
@@ -39,6 +32,7 @@
 			<div class="closebutton">X</div>
 			<div class="title">{{module.title}}</div>
 			<div class="summary">{{module.description}}</div>
+			<div class='decision'></div>
 			<!--<div plumb-connect class="connect">Connect here</div>-->
 		</div>
 	</div>

@@ -14,9 +14,10 @@ myApp.controller('PlumbCtrl', function($scope) {
 		this.y = y;
 	}
 
-	function connection(source_schema_id, target_schema_id) {
+	function connection(source_schema_id, target_schema_id, source_node_type) {
 		this.source_schema_id = source_schema_id;
 		this.target_schema_id = target_schema_id;
+		this.source_node_type = source_node_type;
 	}
 
 	// module should be visualized by title, icon
@@ -55,7 +56,8 @@ myApp.controller('PlumbCtrl', function($scope) {
 		$scope.schema.connections = [];
 		$scope.schema.connections = [{
 			"source_schema_id": "4",
-			"target_schema_id": "3"
+			"target_schema_id": "3",
+			"source_node_type": "YES"
 		}];
 		$scope.schema.modules = [{
 			"library_id": 1,
@@ -76,7 +78,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 		}, {
 			"library_id": 0,
 			"schema_id": 5,
-			"type": "type2",
+			"type": "decision",
 			"title": "Sum",
 			"description": "Aggregates an incoming sequences of values and returns the sum",
 			"x": 60,
@@ -105,15 +107,15 @@ myApp.controller('PlumbCtrl', function($scope) {
 	};
 
 	// add a module connection
-	$scope.addModuleConnection = function(source_schema_id, target_schema_id) {
-		console.log("Add module connection " + source_schema_id + " to " + target_schema_id);
-		var c = new connection(source_schema_id, target_schema_id);
+	$scope.addModuleConnection = function(source_schema_id, target_schema_id, source_node_type) {
+		console.log("Add module connection " + source_schema_id + " to " + target_schema_id + " with: " + source_node_type);
+		var c = new connection(source_schema_id, target_schema_id, source_node_type);
 		$scope.schema.connections.push(c);
 		$scope.$apply();
 
 	};
 
-	// add a module connection
+	// remove a module connection
 	$scope.removeModuleConnection = function(source_schema_id, target_schema_id) {
 		console.log("Remove module connection " + source_schema_id + " to " + target_schema_id);
 		for (var i = 0; i < $scope.schema.connections.length; i++) {
@@ -180,6 +182,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 		jsPlumb.bind("ready", function() {
 			console.log("Set up jsPlumb listeners (should be only done once)");
 			jsPlumb.importDefaults({
+				ConnectionsDetachable:false,
 				Connector: "Bezier",
 				ConnectionOverlays: [
 					//["Arrow", {
@@ -194,7 +197,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 						events: {
 							click: function(labelOverlay, originalEvent) {
 								var conn = labelOverlay.component;
-								console.log(labelOverlay);
+								console.log("Overlay click:",conn);
 								//alert("you clicked on the label overlay for this connection :" + labelOverlay.connection);
 								//if (confirm("Delete connection from " + conn.sourceId + " to " + conn.targetId + "?")){
 								jsPlumb.detach(conn);
@@ -214,6 +217,9 @@ myApp.controller('PlumbCtrl', function($scope) {
 			jsPlumb.setContainer('container');
 			jsPlumb.bind("connection", function(info) {
 
+			});
+			jsPlumb.bind("connectionDetached", function(info) {
+				console.log("Detached:",info);
 			});
 
 		});
@@ -271,25 +277,25 @@ myApp.directive('plumbItem', ['$document', function($document) {
 				},
 				// .. and this is the hover style.
 				connectorHoverStyle = {
-					lineWidth: 4,
-					strokeStyle: "#216477",
-					outlineWidth: 0,
-					outlineColor: "transparent"
+					//outlineWidth: 1,
+					//outlineColor: "white"
 				},
 				endpointHoverStyle = {
-					fillStyle: "#216477",
-					strokeStyle: "#216477"
+					//fillStyle: "#216477",
+					//strokeStyle: "#216477"
 				};
 
 			var endpointOptions = {
+				//uniqueEndpoint:true,
 				endpoint: "Dot",
 				paintStyle: {
 					width: 25,
 					height: 21,
-					fillStyle: '#ccc'
-				},
-				connectorStyle: {
-					strokeStyle: "#ccc"
+					//fillStyle: '#ccc'
+					strokeStyle: "#ccc",
+					fillStyle: "white",
+					radius: 7,
+					lineWidth: 1
 				},
 				connectorStyle: connectorPaintStyle,
 				hoverPaintStyle: endpointHoverStyle,
@@ -300,39 +306,100 @@ myApp.directive('plumbItem', ['$document', function($document) {
 					else {
 						var sourceSchemaId = event.connection.source.getAttribute('data-identifier');
 						var targetSchemaId = event.connection.target.getAttribute('data-identifier');
-						scope.$parent.addModuleConnection(sourceSchemaId, targetSchemaId)
+						var j = scope.$parent.schema.connections.length;
+						while (j--) {
+							if (scope.$parent.schema.connections[j].source_schema_id == sourceSchemaId && scope.$parent.schema.connections[j].target_schema_id == targetSchemaId) {
+								console.log('Connection already exist');
+								return false;
+							}
+						}
+
+						var params = event.connection.getParameters();
+						scope.$parent.addModuleConnection(sourceSchemaId, targetSchemaId, params.source_node_type)
 						return true;
 					}
 				}
 			};
 
+			if (scope.module.type == 'decision') {
+				jsPlumb.addEndpoint(element, {
+					anchor: [0.75, 1, 0, 1],
+					paintStyle: {
+						strokeStyle: "#6BBC5F",
+						fillStyle: "white",
+						radius: 7,
+						lineWidth: 1
+					},
+					connectorStyle: {
+						lineWidth: 4,
+						strokeStyle: "#6BBC5F",
+						joinstyle: "round",
+						outlineColor: "transparent",
+						outlineWidth: 0
+					},
+					maxConnections: -1,
+					isSource: true,
+					cssClass: 'sourceEndpointYES',
+					parameters: {
+						"source_node_type": 'YES',
+					},
+					uuid: 'module_' + schema_id + '_YES_source'
 
-			jsPlumb.addEndpoint(element, {
-				anchor: "Bottom",
-				maxConnections:-1,
-				isSource: true,
-				paintStyle:{
-					strokeStyle:"#ccc",
-					fillStyle:"transparent",
-					radius:7,
-					lineWidth:3
-				},
-				cssClass:'sourceEndpoint',
-				uuid: 'module_' + schema_id + '_source'
+				}, endpointOptions);
 
-			}, endpointOptions);
+				jsPlumb.addEndpoint(element, {
+					anchor: [0.25, 1, 0, 1],
+					paintStyle: {
+						strokeStyle: "#E74C3C",
+						fillStyle: "white",
+						radius: 7,
+						lineWidth: 1
+					},
+					connectorStyle: {
+						lineWidth: 4,
+						strokeStyle: "#E74C3C",
+						joinstyle: "round",
+						outlineColor: "transparent",
+						outlineWidth: 0
+					},
+					maxConnections: -1,
+					isSource: true,
+					cssClass: 'sourceEndpointNO',
+					parameters: {
+						"source_node_type": 'NO',
+					},
+					uuid: 'module_' + schema_id + '_NO_source'
+
+				}, endpointOptions);
+			} else {
+				var decision = element[0].querySelector('.decision');
+				decision.style.display = 'none';
+				console.log(element);
+				jsPlumb.addEndpoint(element, {
+					anchor: "Bottom",
+					maxConnections: -1,
+					isSource: true,
+					cssClass: 'sourceEndpoint',
+					parameters: {
+						"source_node_type": 'YES',
+					},
+					uuid: 'module_' + schema_id + '_YES_source'
+
+				}, endpointOptions);
+
+			}
 
 			jsPlumb.addEndpoint(element, {
 				anchor: "Top",
 				isTarget: true,
-				maxConnections:-1,
-				paintStyle:{
-					strokeStyle:"#ccc",
-					fillStyle:"transparent",
-					radius:7,
-					lineWidth:3
+				maxConnections: -1,
+				paintStyle: {
+					strokeStyle: "#ccc",
+					fillStyle: "white",
+					radius: 7,
+					lineWidth: 1
 				},
-				cssClass:'targetEndpoint',
+				cssClass: 'targetEndpoint',
 				dropOptions: {
 					hoverClass: "hover",
 					activeClass: "active"
@@ -340,25 +407,6 @@ myApp.directive('plumbItem', ['$document', function($document) {
 				uuid: 'module_' + schema_id + '_target'
 			}, endpointOptions);
 
-
-			/*
-						jsPlumb.makeTarget(element, {
-							anchor: 'Top',
-							endpoint:"Dot",
-							paintStyle:{ fillStyle:"#7AB02C",radius:11 },
-							ConnectionsDetachable:true,
-							deleteEndpointsOnDetach:false,
-							isTarget:true,
-							maxConnections: 1,
-							beforeDrop:function(event){
-								if (event.sourceId == event.targetId) //Prevent loopback
-									return false;
-								else{
-									return true;
-								}
-							}
-						});
-			*/
 			jsPlumb.draggable(element, {
 				containment: 'parent'
 			});
@@ -366,7 +414,7 @@ myApp.directive('plumbItem', ['$document', function($document) {
 			element.bind('dblclick', function() {
 				alert('Module settings are coming here');
 			});
-			// this should actually done by a AngularJS template and subsequently a controller attached to the dbl-click event
+
 			var closebutton = angular.element(element[0].querySelector('.closebutton'));
 			closebutton.bind('click', function(e) {
 
@@ -454,10 +502,11 @@ myApp.directive('plumbConnection', function() {
 		link: function(scope, element, attrs) {
 			console.log("Add plumbing for the 'connection' element");
 			var source_schema_id = scope.connection.source_schema_id,
-				target_schema_id = scope.connection.target_schema_id;
+				target_schema_id = scope.connection.target_schema_id,
+				source_node_type = scope.connection.source_node_type;
 			console.log(scope.$parent.schema.connections);
 			jsPlumb.connect({
-				uuids: ["module_" + source_schema_id + "_source", "module_" + target_schema_id + "_target"]
+				uuids: ["module_" + source_schema_id + "_" + source_node_type + "_source", "module_" + target_schema_id + "_target"]
 			});
 
 		}
