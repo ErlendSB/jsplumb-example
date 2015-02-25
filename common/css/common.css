@@ -8,7 +8,26 @@
 	width: 60px;
 	background-color: #A074BE;
 }
-
+.NOLabel{
+	float: left;
+	font-weight: 700;
+	position: relative;
+	left: 50px;
+	top: 5px;
+}
+.WaitIcon{
+	float: left;
+	position: relative;
+	left: 90px;
+	top: 5px;
+}
+.YESLabel{
+	float: right;
+	font-weight: 700;
+	position: relative;
+	right: 50px;
+	top: 5px;
+}
 .connect {
 	width: 100%;
 	height: 20px;
@@ -127,6 +146,20 @@ path, ._jsPlumb_endpoint { cursor:pointer; }
 }
 .targetEndpoint._jsPlumb_endpoint_connected svg circle{
 	fill:#ccc;
+}
+.targetEndpointNO._jsPlumb_endpoint_connected svg circle{
+	fill:#E74C3C;
+	stroke:#E74C3C;
+}
+.targetEndpointNO._jsPlumb_endpoint_connected{
+	z-index: 10;
+}
+.targetEndpointYES._jsPlumb_endpoint_connected svg circle{
+	fill:#6BBC5F;
+	stroke: #6BBC5F;
+}
+.targetEndpointYES._jsPlumb_endpoint_connected{
+	z-index: 10;
 }
 .jsplumb-drag-active{
 	opacity: .5;

@@ -57,7 +57,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 		$scope.schema.connections = [{
 			"source_schema_id": "4",
 			"target_schema_id": "3",
-			"source_node_type": "YES"
+			"source_node_type": "DEFAULT"
 		}];
 		$scope.schema.modules = [{
 			"library_id": 1,
@@ -89,7 +89,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 		//var sourceElement = document.querySelectorAll("[data-identifier='4']");
 		//});
 		$scope.library = [];
-		$scope.addModuleToLibrary("Sum", "Aggregates an incoming sequences of values and returns the sum", "type2",
+		$scope.addModuleToLibrary("Sum", "Aggregates an incoming sequences of values and returns the sum", "decision",
 			$scope.library_topleft.x + $scope.library_topleft.margin,
 			$scope.library_topleft.y + $scope.library_topleft.margin);
 		$scope.addModuleToLibrary("Camera", "Hooks up to hardware camera and sends out an image at 20 Hz", "type1",
@@ -182,7 +182,7 @@ myApp.controller('PlumbCtrl', function($scope) {
 		jsPlumb.bind("ready", function() {
 			console.log("Set up jsPlumb listeners (should be only done once)");
 			jsPlumb.importDefaults({
-				ConnectionsDetachable:false,
+				ConnectionsDetachable: false,
 				Connector: "Bezier",
 				ConnectionOverlays: [
 					//["Arrow", {
@@ -197,14 +197,18 @@ myApp.controller('PlumbCtrl', function($scope) {
 						events: {
 							click: function(labelOverlay, originalEvent) {
 								var conn = labelOverlay.component;
-								console.log("Overlay click:",conn);
+								console.log("Overlay click:", conn);
 								//alert("you clicked on the label overlay for this connection :" + labelOverlay.connection);
 								//if (confirm("Delete connection from " + conn.sourceId + " to " + conn.targetId + "?")){
-								var conns = jsPlumb.getConnections({source:conn.sourceId, target:conn.targetId });
+								var conns = jsPlumb.getConnections({
+									source: conn.sourceId,
+									target: conn.targetId
+								});
 								console.log(conns);
-								for (var i = 0; i < conns.length; i++){
-   									jsPlumb.detach(conns[i]);
+								for (var i = 0; i < conns.length; i++) {
+									jsPlumb.detach(conns[i]);
 								}
+
 								//jsPlumb.detach(conn);
 								$scope.$apply(function() {
 									var sourceSchemaId = document.getElementById(conn.sourceId).getAttribute('data-identifier');
@@ -224,7 +228,29 @@ myApp.controller('PlumbCtrl', function($scope) {
 
 			});
 			jsPlumb.bind("connectionDetached", function(info) {
-				console.log("Detached:",info);
+				console.log("Detached:", info);
+				var YESConnectionExist = false;
+				var NOConnectionExist = false;
+				//Check if other connections exist for this targetEndPoint
+				var conns = jsPlumb.getConnections({
+					target: info.targetId
+				});
+				console.log("conns:", conns.length);
+				for (var i = 0; i < conns.length; i++) {
+					var params = conns[i].getParameters();
+					if (params.source_node_type == "YES")
+						YESConnectionExist = true;
+					if (params.source_node_type == "NO")
+						NOConnectionExist = true;
+
+				}
+
+				//If a decision connection exist - keep the colored endpoint
+				if (!NOConnectionExist)
+					info.targetEndpoint.canvas.classList.remove('targetEndpointNO');
+				if (!YESConnectionExist)
+					info.targetEndpoint.canvas.classList.remove('targetEndpointYES');
+
 			});
 
 		});
@@ -320,7 +346,12 @@ myApp.directive('plumbItem', ['$document', function($document) {
 						}
 
 						var params = event.connection.getParameters();
-						scope.$parent.addModuleConnection(sourceSchemaId, targetSchemaId, params.source_node_type)
+						scope.$parent.addModuleConnection(sourceSchemaId, targetSchemaId, params.source_node_type);
+						if (params.source_node_type == "NO") {
+							event.dropEndpoint.canvas.classList.add('targetEndpointNO');
+						} else if (params.source_node_type == "YES") {
+							event.dropEndpoint.canvas.classList.add('targetEndpointYES');
+						}
 						return true;
 					}
 				}
@@ -386,9 +417,9 @@ myApp.directive('plumbItem', ['$document', function($document) {
 					isSource: true,
 					cssClass: 'sourceEndpoint',
 					parameters: {
-						"source_node_type": 'YES',
+						"source_node_type": 'DEFAULT',
 					},
-					uuid: 'module_' + schema_id + '_YES_source'
+					uuid: 'module_' + schema_id + '_DEFAULT_source'
 
 				}, endpointOptions);
 
