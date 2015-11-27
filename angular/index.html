@@ -30,8 +30,11 @@
 	<div id="container" class="drop-container" droppable="true">
 		<div plumb-item class="item" ng-repeat="module in schema.modules" data-identifier="{{module.schema_id}}">
 			<div class="closebutton">X</div>
-			<div class="title">{{module.title}}</div>
-			<div class="summary">{{module.description}}</div>
+			<div class="module-icon"></div>
+			<div class="summary">
+				<span>{{module.title}}</span><br>
+				<span>{{module.description}}</span>
+			</div>
 			<div class='decision'>
 				<div class='NOLabel'>10 min</div>
 				<div class='WaitIcon'>(└)</div>

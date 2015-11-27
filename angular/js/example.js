@@ -63,24 +63,24 @@ myApp.controller('PlumbCtrl', function($scope) {
 			"library_id": 1,
 			"schema_id": 3,
 			"type": "type1",
-			"title": "Camera",
-			"description": "Hooks up to hardware camera and sends out an image at 20 Hz",
+			"title": "E-mail",
+			"description": "reply to contact",
 			"x": 656,
 			"y": 322
 		}, {
 			"library_id": 1,
 			"schema_id": 4,
 			"type": "type1",
-			"title": "Camera",
-			"description": "Hooks up to hardware camera and sends out an image at 20 Hz",
+			"title": "E-mail",
+			"description": "reply to contact",
 			"x": 403,
 			"y": 125
 		}, {
 			"library_id": 0,
 			"schema_id": 5,
 			"type": "decision",
-			"title": "Sum",
-			"description": "Aggregates an incoming sequences of values and returns the sum",
+			"title": "Submitted form",
+			"description": "user behaviour",
 			"x": 60,
 			"y": 78
 		}];
@@ -89,10 +89,10 @@ myApp.controller('PlumbCtrl', function($scope) {
 		//var sourceElement = document.querySelectorAll("[data-identifier='4']");
 		//});
 		$scope.library = [];
-		$scope.addModuleToLibrary("Sum", "Aggregates an incoming sequences of values and returns the sum", "decision",
+		$scope.addModuleToLibrary("Submitted form", "user behaviour", "decision",
 			$scope.library_topleft.x + $scope.library_topleft.margin,
 			$scope.library_topleft.y + $scope.library_topleft.margin);
-		$scope.addModuleToLibrary("Camera", "Hooks up to hardware camera and sends out an image at 20 Hz", "type1",
+		$scope.addModuleToLibrary("E-mail", "reply to contact", "type1",
 			$scope.library_topleft.x + $scope.library_topleft.margin,
 			$scope.library_topleft.y + $scope.library_topleft.margin + $scope.library_topleft.item_height);
 	};
@@ -412,7 +412,7 @@ myApp.directive('plumbItem', ['$document', function($document) {
 				decision.style.display = 'none';
 				console.log(element);
 				jsPlumb.addEndpoint(element, {
-					anchor: "Bottom",
+					anchor: "Bottom", // AutoDefault
 					maxConnections: -1,
 					isSource: true,
 					cssClass: 'sourceEndpoint',
